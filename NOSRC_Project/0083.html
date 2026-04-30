@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOSRC | ACCESS RESTRICTED - 0083</title>
+    <style>
+        :root {
+            --alert-red: #ff3333;
+            --dark-bg: #050000;
+            --terminal-gray: #aaaaaa;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--alert-red);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            text-transform: uppercase;
+        }
+
+        /* 严重的扫描线效果 */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.1), rgba(0, 0, 0, 0), rgba(255, 0, 0, 0.1));
+            z-index: 999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .header {
+            border: 2px solid var(--alert-red);
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            animation: blink-border 0.5s infinite;
+        }
+
+        @keyframes blink-border {
+            0%, 100% { border-color: var(--alert-red); }
+            50% { border-color: transparent; }
+        }
+
+        .document-body {
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            background: rgba(255, 0, 0, 0.05);
+            padding: 30px;
+            border-left: 1px solid var(--alert-red);
+            position: relative;
+        }
+
+        .stamp {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: 4px solid var(--alert-red);
+            padding: 10px;
+            transform: rotate(15deg);
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        .line { margin-bottom: 15px; visibility: hidden; }
+        .visible { visibility: visible; }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 40px;
+            color: var(--terminal-gray);
+            text-decoration: none;
+            border: 1px solid var(--terminal-gray);
+            padding: 5px 15px;
+            transition: all 0.3s;
+        }
+        .back-link:hover {
+            background: var(--terminal-gray);
+            color: black;
+        }
+
+        .redacted {
+            background: var(--alert-red);
+            color: var(--alert-red);
+            cursor: help;
+        }
+        .redacted:hover { color: black; }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        .glitch-text { animation: glitch 0.2s infinite; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 class="glitch-text">TOP SECRET // EYES ONLY</h1>
+    <p>NOSRC PROTOCOL 0083: PROJECT STARDUST</p>
+</div>
+
+<div class="document-body">
+    <div class="stamp">TERMINATE ON SIGHT</div>
+    
+    <div id="text-container">
+        </div>
+
+    <a href="index.html" class="back-link">< RETURN TO SECURE TERMINAL</a>
+</div>
+
+<script>
+    const content = [
+        "> INITIALIZING DECRYPTION SEQUENCE...",
+        "> ACCESSING ARCHIVE: DATA_STREAM_0083",
+        "> SUBJECT: THE 'STARDUST' INCIDENT",
+        "-----------------------------------------",
+        "DATE: [REDACTED] 1983",
+        "LOCATION: SOUTH PACIFIC / COORDINATES CLASSIFIED",
+        "OBJECTIVE: RECOVERY OF NON-TERRESTRIAL 'SPICE' SAMPLES.",
+        " ",
+        "REPORT:",
+        "DURING THE RECOVERY OF THE FALLEN ARTIFACT, FIELD TEAM 7 REPORTED MASSIVE VISUAL HALLUCINATIONS AND REALITY FRACTURES.",
+        "THE ARTIFACT, DESIGNATED 'GP-02', EXHIBITED SIGNS OF <span class='redacted'>EXTRA-DIMENSIONAL CONSCIOUSNESS</span>.",
+        " ",
+        "FATALITIES: 142 PERSONNEL.",
+        "STATUS: PROJECT MOVED TO UNDERGROUND FACILITY NOSRC-DC-07.",
+        "WARNING: ANY ATTEMPT TO VIEW THE SOURCE CODE OF THIS FILE WILL TRIGGER A COGNITOHAZARD ALERT.",
+        " ",
+        "SOLOMON, I HAVE RETURNED.",
+        "-----------------------------------------",
+        "> END OF FILE. SESSION LOGGED."
+    ];
+
+    const container = document.getElementById('text-container');
+
+    async function typeWriter() {
+        for (let i = 0; i < content.length; i++) {
+            const line = document.createElement('div');
+            line.className = 'line';
+            line.innerHTML = content[i];
+            container.appendChild(line);
+            
+            // 模拟打字延迟
+            await new Promise(r => setTimeout(r, 400)); 
+            line.classList.add('visible');
+            
+            // 如果是空行，停顿长一点
+            if (content[i] === " ") await new Promise(r => setTimeout(r, 600));
+        }
+    }
+
+    window.onload = typeWriter;
+</script>
+
+</body>
+</html>

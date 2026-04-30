@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>404 - ACCESS DENIED</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #ff3333; /* 警告红 */
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            flex-direction: column;
+        }
+        .warning-box {
+            border: 2px solid #ff3333;
+            padding: 40px;
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+        h1 { font-size: 3rem; margin: 0; }
+        p { letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+    <div class="warning-box">
+        <h1>[!] SECURITY BREACH</h1>
+        <p>UNAUTHORIZED PATH DETECTED.</p>
+        <p>YOUR IP HAS BEEN LOGGED AND SENT TO NOSRC ENFORCEMENT.</p>
+        <p id="ip-display">LOCATING...</p>
+    </div>
+
+    <script>
+        // 增加一点真实感：显示用户的 IP（虽然是前端获取，但足以唬人）
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('ip-display').innerText = "TRACKING: " + data.ip;
+            });
+            
+        // 5秒后强制踢回首页
+        setTimeout(() => { window.location.href = "index.html"; }, 5000);
+    </script>
+</body>
+</html>

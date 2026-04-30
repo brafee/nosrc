@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOSRC | Geography & Spatial Anomalies</title>
+    <style>
+        :root {
+            --neon-green: #33ff33;
+            --dark-bg: #0a0a0a;
+            --alert-red: #ff3333;
+            --geo-blue: #00ffff;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        /* CRT Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 100;
+            background-size: 100% 2px, 2px 100%;
+            pointer-events: none;
+        }
+
+        .container { padding: 30px; flex-grow: 1; overflow-y: auto; z-index: 1; }
+        header { border-bottom: 2px solid var(--neon-green); margin-bottom: 20px; }
+
+        .geo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 25px;
+        }
+
+        .geo-card {
+            border: 1px solid var(--neon-green);
+            background: rgba(0, 255, 255, 0.02);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border-left: 5px solid var(--geo-blue);
+            transition: all 0.3s ease;
+        }
+
+        /* 拓扑缩略图模拟 */
+        .topo-map {
+            width: 100%;
+            height: 180px;
+            background: #050505;
+            margin: 15px 0;
+            border: 1px solid var(--geo-blue);
+            position: relative;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 50%, transparent 20%, rgba(0, 255, 255, 0.1) 21%, transparent 25%),
+                radial-gradient(circle at 30% 40%, transparent 10%, rgba(0, 255, 255, 0.05) 11%, transparent 15%);
+        }
+
+        /* 空间扭曲扫描线 */
+        .distortion-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--geo-blue);
+            box-shadow: 0 0 15px var(--geo-blue);
+            top: 0;
+            animation: scanVertical 3s linear infinite;
+        }
+
+        @keyframes scanVertical {
+            0% { top: 0%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* 稳定性指标 */
+        .stability-meter {
+            width: 100%;
+            height: 12px;
+            background: #111;
+            border: 1px solid var(--geo-blue);
+            margin-top: 10px;
+            position: relative;
+        }
+
+        .stability-fill {
+            height: 100%;
+            width: 85%;
+            background: var(--geo-blue);
+            transition: width 0.5s ease-out;
+        }
+
+        .warning-text { color: var(--alert-red); animation: flash 1s infinite; }
+        @keyframes flash { 50% { opacity: 0; } }
+
+        .btn { border: 1px solid var(--neon-green); color: var(--neon-green); text-decoration: none; padding: 10px 20px; font-size: 0.8rem; display: inline-block; margin-top: 20px; }
+        .btn:hover { background: var(--neon-green); color: black; }
+
+        footer { border-top: 1px solid var(--neon-green); padding: 15px 30px; font-size: 0.8rem; background: rgba(51, 255, 51, 0.05); margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>NOSRC | GEOSPATIAL_ANOMALIES</h1>
+        <p>Real-time monitoring of localized reality fissures, spatial loops, and environmental dead zones.</p>
+    </header>
+
+    <div class="geo-grid">
+        <div class="geo-card" id="user-location-card" style="border-left-color: var(--alert-red); display: none;">
+            <div style="display: flex; justify-content: space-between; color: var(--alert-red);">
+                <span>LOC_ID: [LOCAL_VISITOR_DETECTED]</span>
+                <span class="warning-text">SCANNING_UPLINK...</span>
+            </div>
+            <div class="topo-map" style="border-color: var(--alert-red);">
+                <div class="distortion-line" style="background: var(--alert-red); box-shadow: 0 0 10px var(--alert-red);"></div>
+                <div id="user-coords" style="position: absolute; bottom: 10px; right: 10px; font-size: 0.6rem; color: var(--alert-red);">COORD: TRACING...</div>
+                <div style="position: absolute; top: 10px; left: 10px; font-size: 0.5rem; color: var(--alert-red); opacity: 0.7;">
+                    IP_TRACE_ACTIVE<br>REALITY_STABILITY_SCANNING...
+                </div>
+            </div>
+            <div style="font-size: 0.8rem;">
+                LOCATION: <span id="user-city" style="color: var(--alert-red);">DETERMINING...</span><br>
+                HUME_LEVEL: <span id="user-hume" style="color: var(--alert-red);">1.00</span> (CALIBRATING)<br>
+                SPATIAL_STABILITY:
+                <div class="stability-meter" style="border-color: var(--alert-red);">
+                    <div id="user-stability-bar" class="stability-fill" style="width: 100%; background: var(--alert-red);"></div>
+                </div>
+            </div>
+            <p style="font-size: 0.7rem; color: #888; margin-top: 10px;">
+                OBSERVATION: Local spatial integrity is within baseline. Visitor IP has been logged into Sector-7 metadata archives.
+            </p>
+        </div>
+
+        <div class="geo-card">
+            <div style="display: flex; justify-content: space-between; color: var(--geo-blue);">
+                <span>LOC_ID: ZONE-ALPHA-9</span>
+                <span>STATUS: ACTIVE LOOP</span>
+            </div>
+            <div class="topo-map">
+                <div class="distortion-line"></div>
+                <div style="position: absolute; top: 10px; left: 10px; font-size: 0.6rem; color: var(--geo-blue);">TOPOGRAPHIC_SCAN_v2.1</div>
+            </div>
+            <div style="font-size: 0.8rem;">
+                LOCATION: [REDACTED], SIBERIA<br>
+                HUME_LEVEL: 0.42 (CRITICAL LOW)<br>
+                SPATIAL_STABILITY:
+                <div class="stability-meter">
+                    <div class="stability-fill" style="width: 24%; background: var(--alert-red);"></div>
+                </div>
+            </div>
+            <p style="font-size: 0.7rem; color: #888; margin-top: 10px;">
+                OBSERVATION: A 2km radius where topography repeats every 400 meters. Compass headings oscillate rapidly.
+            </p>
+        </div>
+
+        <div class="geo-card" style="border-left-color: var(--neon-green);">
+            <div style="display: flex; justify-content: space-between; color: var(--neon-green);">
+                <span>LOC_ID: SITE-VOID-0</span>
+                <span>STATUS: STABILIZED</span>
+            </div>
+            <div class="topo-map" style="border-color: var(--neon-green);">
+                <div class="distortion-line" style="background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green);"></div>
+                <div style="position: absolute; bottom: 10px; right: 10px; font-size: 0.6rem;">GRID_REF: 40.7128N, 74.0060W</div>
+            </div>
+            <div style="font-size: 0.8rem;">
+                LOCATION: UNDERGROUND FACILITY, NY<br>
+                HUME_LEVEL: 1.05 (NORMALIZED)<br>
+                SPATIAL_STABILITY:
+                <div class="stability-meter" style="border-color: var(--neon-green);">
+                    <div class="stability-fill" style="width: 98%;"></div>
+                </div>
+            </div>
+            <p style="font-size: 0.7rem; color: #888; margin-top: 10px;">
+                OBSERVATION: Sub-level floors that exist only during solar eclipses. Currently dormant under Protocol "Deep Sleep".
+            </p>
+        </div>
+    </div>
+
+    <a href="index.html" class="btn">[BACK_TO_ROOT]</a>
+</div>
+
+<footer class="status-bar">
+    <span>TECTONIC_SENSORS: ONLINE</span>
+    <span>REALITY_ANCHORS: ENGAGED (8/8)</span>
+    <span>UPLINK_NODE: <span id="user-ip-footer">SCANNING...</span></span>
+</footer>
+
+<script>
+    // 1. 获取访客位置
+    async function traceUserLocation() {
+        const card = document.getElementById('user-location-card');
+        const cityText = document.getElementById('user-city');
+        const coordsText = document.getElementById('user-coords');
+        const humeText = document.getElementById('user-hume');
+        const bar = document.getElementById('user-stability-bar');
+        const footerIp = document.getElementById('user-ip-footer');
+
+        try {
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+
+            if (data.ip) {
+                card.style.display = 'flex';
+                footerIp.innerText = data.ip;
+                cityText.innerText = `${data.city.toUpperCase()}, ${data.country_name.toUpperCase()}`;
+                coordsText.innerText = `COORD: ${data.latitude}N, ${data.longitude}W`;
+                
+                // 随机 Hume 指数
+                const randomHume = (Math.random() * (1.1 - 0.8) + 0.8).toFixed(2);
+                humeText.innerText = randomHume;
+                if (randomHume < 0.9) bar.style.width = '35%';
+            }
+        } catch (e) {
+            // 容错处理
+            card.style.display = 'flex';
+            cityText.innerText = "UNKNOWN_SECTOR_7";
+            footerIp.innerText = "ENCRYPTED_PROXY";
+        }
+    }
+
+    // 2. 模拟数值波动
+    setInterval(() => {
+        const meters = document.querySelectorAll('.stability-fill');
+        meters.forEach(m => {
+            let currentWidth = parseInt(m.style.width) || 80;
+            let drift = (Math.random() - 0.5) * 4;
+            m.style.width = Math.min(100, Math.max(10, currentWidth + drift)) + '%';
+        });
+    }, 2000);
+
+    // 启动追踪
+    traceUserLocation();
+</script>
+
+</body>
+</html>

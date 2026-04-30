@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOSRC | Internal Security Portal</title>
+    <style>
+        :root {
+            --neon-green: #33ff33;
+            --dark-bg: #0a0a0a;
+            --alert-red: #ff3333;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        /* CRT Scanline Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .container {
+            padding: 40px;
+            z-index: 1;
+            flex-grow: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        header { border-bottom: 2px solid var(--neon-green); margin-bottom: 20px; padding-bottom: 10px; }
+
+        .clearance-tag {
+            background-color: var(--neon-green);
+            color: black;
+            padding: 5px 15px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .archive-entry {
+            border-left: 4px solid var(--neon-green);
+            padding-left: 20px;
+            margin-bottom: 40px;
+            transition: all 0.2s ease;
+            animation: entryFade 0.6s ease-out forwards;
+        }
+
+        .archive-entry:hover {
+            background: rgba(51, 255, 51, 0.05);
+            transform: translateX(10px);
+            border-left-width: 8px;
+        }
+
+        @keyframes entryFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .decrypt-bar { width: 100%; height: 2px; background: rgba(51, 255, 51, 0.1); margin: 10px 0; position: relative; overflow: hidden; }
+        .decrypt-fill { position: absolute; top: 0; left: 0; height: 100%; background: var(--neon-green); width: 0%; box-shadow: 0 0 10px var(--neon-green); }
+
+        .nav-item {
+            border: 1px solid var(--neon-green);
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: inline-block;
+        }
+
+        .nav-item:hover { background: var(--neon-green); color: black; box-shadow: 0 0 20px var(--neon-green); }
+
+        .status-bar {
+            border-top: 1px solid var(--neon-green);
+            padding: 10px 40px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            background: rgba(51, 255, 51, 0.05);
+            z-index: 11;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-green); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>NOSRC | ENCRYPTED ARCHIVES</h1>
+        <p>National Occult and Supernatural Research Center</p>
+    </header>
+
+    <div class="clearance-tag">CLASSIFICATION: TOP SECRET - LEVEL 4 ACCESS ONLY</div>
+
+    <section id="main">
+        <div id="archive-container"></div>
+        <div style="margin-top: 30px; border-top: 1px dashed var(--neon-green); padding-top: 20px; margin-bottom: 50px;">
+            <a href="index.html" class="nav-item">[RETURN_TO_ROOT]</a>
+        </div>
+    </section>
+</div>
+
+<footer class="status-bar">
+    <span>SYSTEM_STATUS: STABLE</span>
+    <span>NODE: NOSRC-DC-07</span>
+    <span>TIMESTAMP: <span id="clock"></span></span>
+</footer>
+
+<audio id="sound-hover" preload="auto">
+    <source src="data:audio/wav;base64,UklGRl9vT1R3YXZlZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU1vT1R0Z3h4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4" type="audio/wav">
+</audio>
+<audio id="sound-click" preload="auto">
+    <source src="data:audio/wav;base64,UklGRjJvT1R3YXZlZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YT1vT1R0Z3h4eHh4eHh4eHh4eHh4" type="audio/wav">
+</audio>
+
+<script>
+    const manualCases = [
+        { id: "0912", name: "Whispering Radio", level: "CRITICAL", color: "#ff3333", desc: "Shortwave broadcast on 99.9MHz that plays the listener's final words 48 hours prior to death." },
+        { id: "2026", name: "Temporal Anchor", level: "UNKNOWN", color: "#00ffff", desc: "Evidence of a massive timeline overlap event detected for April 2026." }
+    ];
+
+    const lexicon = {
+        prefix: ["The", "Project", "Site", "Subject", "Object", "Anomaly"],
+        noun: ["Shadow", "Mirror", "Vessel", "Echo", "Labyrinth", "Static"],
+        action: ["that consumes", "which replicates", "found within", "distorting"],
+        location: ["the digital void", "urban infrastructure", "human optic nerves"]
+    };
+
+    const levels = [{name:"STABLE", color:"#33ff33"}, {name:"CAUTION", color:"#ffff33"}, {name:"CRITICAL", color:"#ff3333"}];
+
+    function generateRandomCase() {
+        const id = Math.floor(1000 + Math.random() * 9000);
+        const lvl = levels[Math.floor(Math.random() * levels.length)];
+        const name = `${lexicon.prefix[Math.floor(Math.random()*lexicon.prefix.length)]} ${lexicon.noun[Math.floor(Math.random()*lexicon.noun.length)]}`;
+        const desc = `${name} is an anomaly ${lexicon.action[Math.floor(Math.random()*lexicon.action.length)]} ${lexicon.location[Math.floor(Math.random()*lexicon.location.length)]}.`;
+        return { id, name, level: lvl.name, color: lvl.color, desc };
+    }
+
+    const container = document.getElementById('archive-container');
+    const hoverSnd = document.getElementById('sound-hover');
+    const clickSnd = document.getElementById('sound-click');
+
+    async function renderDatabase(count = 10) {
+        container.innerHTML = `<p>> INITIATING DECRYPTION...</p>`;
+        let finalData = [...manualCases];
+        for (let i = 0; i < count; i++) finalData.push(generateRandomCase());
+        
+        container.innerHTML = '';
+        for (let i = 0; i < finalData.length; i++) {
+            const item = finalData[i];
+            const entry = document.createElement('div');
+            entry.className = 'archive-entry';
+            entry.style.borderLeftColor = item.color;
+            entry.innerHTML = `
+                <div class="decrypt-bar"><div class="decrypt-fill" id="fill-${i}"></div></div>
+                <div id="content-${i}" style="opacity: 0.1;">
+                    <h2 style="color: ${item.color};">#NOSRC-${item.id} | "${item.name}"</h2>
+                    <p><strong>LEVEL:</strong> ${item.level}</p>
+                    <p><strong>DESC:</strong> ${item.desc}</p>
+                </div>`;
+            container.appendChild(entry);
+
+            await new Promise(res => {
+                let p = 0;
+                const inv = setInterval(() => {
+                    p += Math.random() * 20;
+                    document.getElementById(`fill-${i}`).style.width = p + '%';
+                    if(p >= 100) {
+                        clearInterval(inv);
+                        document.getElementById(`content-${i}`).style.opacity = '1';
+                        res();
+                    }
+                }, 40);
+            });
+
+            entry.addEventListener('mouseenter', () => { hoverSnd.currentTime = 0; hoverSnd.play().catch(()=>{}); });
+        }
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleString('en-GB', {hour12:false}).toUpperCase();
+    }
+    
+    setInterval(updateClock, 1000);
+    updateClock();
+    renderDatabase(8);
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => clickSnd.play());
+    });
+</script>
+</body>
+</html>

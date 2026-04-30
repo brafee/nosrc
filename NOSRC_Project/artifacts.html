@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOSRC | Artifact Forensics AI</title>
+    <style>
+        :root {
+            --neon-green: #33ff33;
+            --dark-bg: #0a0a0a;
+            --alert-red: #ff3333;
+            --scan-blue: #0088ff;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        /* 全局 CRT 与 噪声效果 */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 100;
+            background-size: 100% 2px, 2px 100%;
+            pointer-events: none;
+        }
+
+        .container { padding: 30px; flex-grow: 1; overflow-y: auto; z-index: 1; }
+        header { border-bottom: 2px solid var(--neon-green); margin-bottom: 25px; padding-bottom: 10px;}
+
+        .artifact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
+            gap: 30px;
+        }
+
+        .artifact-card {
+            border: 1px solid var(--neon-green);
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 25px;
+            background: rgba(51, 255, 51, 0.03);
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(51, 255, 51, 0.1);
+        }
+
+        /* 3D 扫描预览区增强 */
+        .artifact-preview {
+            width: 180px;
+            height: 180px;
+            border: 1px solid rgba(51, 255, 51, 0.3);
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 模拟 3D 线框物体 */
+        .wireframe-obj {
+            width: 80px;
+            height: 80px;
+            border: 2px solid var(--neon-green);
+            animation: rotate3D 8s linear infinite;
+            position: relative;
+            transform-style: preserve-3d;
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        @keyframes rotate3D {
+            0% { transform: rotateX(0deg) rotateY(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg); }
+        }
+
+        /* AI 扫描线动画 */
+        .scan-bar {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: var(--scan-blue);
+            box-shadow: 0 0 15px var(--scan-blue);
+            top: 0;
+            z-index: 5;
+            animation: scanMove 4s ease-in-out infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes scanMove {
+            0%, 100% { top: 0%; }
+            50% { top: 100%; }
+        }
+
+        /* AI 标签与描述 */
+        .ai-analysis {
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 2px solid var(--scan-blue);
+            line-height: 1.4;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.75rem;
+        }
+
+        .progress-container {
+            width: 120px;
+            height: 6px;
+            background: #111;
+            border: 1px solid #333;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--neon-green);
+            width: 0%; /* 由 JS 填充或手动设置 */
+            transition: width 1s ease-in-out;
+        }
+
+        .risk-high { color: var(--alert-red); animation: flash 1s infinite; }
+        @keyframes flash { 50% { opacity: 0.5; } }
+
+        .btn { 
+            border: 1px solid var(--neon-green); 
+            color: var(--neon-green); 
+            text-decoration: none; 
+            padding: 8px 15px; 
+            font-size: 0.8rem; 
+            transition: 0.3s;
+        }
+        .btn:hover { background: var(--neon-green); color: black; box-shadow: 0 0 10px var(--neon-green); }
+        
+        .footer-status {
+            border-top: 1px solid var(--neon-green);
+            padding: 15px 30px;
+            font-size: 0.75rem;
+            background: rgba(51,255,51,0.05);
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>NOSRC | ARTIFACT_FORENSICS_SYSTEM_v4.0</h1>
+        <p>AI-DRIVEN SPECTRAL DECOMPOSITION & ANOMALY PROFILING</p>
+    </header>
+
+    <div class="artifact-grid">
+        <div class="artifact-card">
+            <div class="artifact-preview">
+                <div class="scan-bar"></div>
+                <div class="wireframe-obj"></div>
+                <div style="position: absolute; top: 5px; right: 5px; font-size: 0.5rem; color: var(--scan-blue);">AI_SCAN_ACTIVE</div>
+            </div>
+            <div class="details">
+                <div style="font-size: 1.1rem; border-bottom: 1px solid var(--neon-green); display: flex; justify-content: space-between;">
+                    <span>OBJ_REF: ART-4402</span>
+                    <span class="risk-high" style="font-size: 0.7rem;">[!! COGNITOHAZARD !!]</span>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <div class="stat-row">
+                        <span>RADIATION_LEVEL</span>
+                        <div class="progress-container"><div class="progress-fill" style="width: 78%; background: var(--alert-red);"></div></div>
+                    </div>
+                    <div class="stat-row">
+                        <span>REALITY_ANCHOR_SYNC</span>
+                        <div class="progress-container"><div class="progress-fill" style="width: 12%;"></div></div>
+                    </div>
+                    <div class="stat-row">
+                        <span>AI_CONFIDENCE</span>
+                        <div class="progress-container"><div class="progress-fill" style="width: 94%; background: var(--scan-blue);"></div></div>
+                    </div>
+                </div>
+
+                <div class="ai-analysis">
+                    [AI_LOG]: Object exhibits non-Euclidean geometry. Forensic AI detected 38% material mismatch with known Periodic Table. Recommend immediate lead-lined containment.
+                </div>
+            </div>
+        </div>
+
+        <div class="artifact-card">
+            <div class="artifact-preview">
+                <div class="scan-bar" style="animation-delay: 1s; background: var(--neon-green);"></div>
+                <div class="wireframe-obj" style="border-radius: 50%; border-style: dashed;"></div>
+                <div style="position: absolute; top: 5px; right: 5px; font-size: 0.5rem;">HEURISTIC_OK</div>
+            </div>
+            <div class="details">
+                <div style="font-size: 1.1rem; border-bottom: 1px solid var(--neon-green); display: flex; justify-content: space-between;">
+                    <span>OBJ_REF: ART-0012</span>
+                    <span style="font-size: 0.7rem; color: var(--scan-blue);">[STABLE_OBJECT]</span>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <div class="stat-row">
+                        <span>TEMPORAL_DRIFT</span>
+                        <div class="progress-container"><div class="progress-fill" style="width: 45%;"></div></div>
+                    </div>
+                    <div class="stat-row">
+                        <span>MOLECULAR_BOND</span>
+                        <div class="progress-container"><div class="progress-fill" style="width: 89%;"></div></div>
+                    </div>
+                </div>
+
+                <div class="ai-analysis" style="border-left-color: var(--neon-green);">
+                    [AI_LOG]: Crystalline silica structure identified. Internal clock mechanisms are operating in reverse-entropy state. No direct threat to personnel recorded in this timeline.
+                </div>
+            </div>
+        </div>
+        
+        <div class="artifact-card">
+            <div class="artifact-preview">
+                <div class="scan-bar" style="background: var(--alert-red); animation-duration: 2s;"></div>
+                <div style="width: 0; height: 0; border-left: 40px solid transparent; border-right: 40px solid transparent; border-bottom: 70px solid var(--alert-red); animation: rotate3D 5s infinite alternate;"></div>
+            </div>
+            <div class="details">
+                <div style="font-size: 1.1rem; border-bottom: 1px solid var(--neon-green);">OBJ_REF: ART-9901</div>
+                
+                <div style="margin-top: 15px;">
+                    <div class="stat-row"><span>HAZARD_INDEX</span><div class="progress-container"><div class="progress-fill" style="width: 95%; background: var(--alert-red);"></div></div></div>
+                </div>
+
+                <div class="ai-analysis" style="border-left-color: var(--alert-red); color: var(--alert-red);">
+                    [SYSTEM_CRITICAL]: AI analysis failed. Object is consuming data packets. Cease all digital observation immediately.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px;">
+        <a href="index.html" class="btn">[RETURN_TO_ROOT]</a>
+    </div>
+</div>
+
+<footer class="footer-status">
+    <div>AI_ENGINE: ACTIVE (NEURAL_CORE_09)</div>
+    <div>THREAT_DATABASE: UPDATED <span id="time-stamp"></span></div>
+    <div>DECOMPOSITION: RUNNING...</div>
+</footer>
+
+<script>
+    // 自动更新时间戳
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('time-stamp').innerText = now.toLocaleTimeString();
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+</script>
+
+</body>
+</html>

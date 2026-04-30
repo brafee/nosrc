@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOSRC | Secure Portal - Matrix Command</title>
+    <style>
+        :root {
+            --neon-green: #33ff33;
+            --dark-bg: #0a0a0a;
+            --alert-red: #ff3333;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        /* 全局 CRT 扫描线 */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            z-index: 1000;
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            padding: 20px;
+            flex-grow: 1;
+            z-index: 1;
+        }
+
+        /* 统一盒子样式 */
+        .portal-box {
+            border: 1px solid var(--neon-green);
+            background: rgba(0, 15, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .box-header {
+            background: var(--neon-green);
+            color: black;
+            padding: 4px 10px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+        }
+
+        /* 进度条样式 */
+        .stat-row { margin-bottom: 8px; }
+        .stat-label { font-size: 0.6rem; display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .bar-bg { width: 100%; height: 4px; background: #111; border: 1px solid var(--neon-green); }
+        .bar-fill { height: 100%; background: var(--neon-green); transition: width 0.5s ease-in-out; }
+
+        /* 右侧监控区 */
+        .monitor-area {
+            position: relative;
+            background: #000;
+            flex-grow: 1;
+            border: 1px solid var(--neon-green);
+            overflow: hidden;
+        }
+
+        #matrix-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            opacity: 0.35;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(51, 255, 51, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(51, 255, 51, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .ping {
+            position: absolute;
+            width: 12px; height: 12px;
+            background: var(--alert-red);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--alert-red);
+            z-index: 10;
+            animation: pulse 2s infinite;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+        }
+
+        .overlay-text {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 8px;
+            border: 1px solid var(--neon-green);
+            font-size: 0.65rem;
+            z-index: 20;
+        }
+
+        .nav-link {
+            border: 1px solid var(--neon-green);
+            padding: 5px 15px;
+            color: var(--neon-green);
+            text-decoration: none;
+            font-size: 0.7rem;
+            margin-right: 10px;
+            transition: 0.3s;
+        }
+        .nav-link:hover { background: var(--neon-green); color: black; box-shadow: 0 0 10px var(--neon-green); }
+
+        #log-feed { padding: 8px; font-size: 0.6rem; color: #666; overflow: hidden; height: 130px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <aside>
+        <div class="portal-box">
+            <div class="box-header">TERMINAL_USER</div>
+            <div style="padding: 12px; font-size: 0.65rem; line-height: 1.4;">
+                ID: #NOSRC-7729<br>
+                AUTH: <span style="color:var(--neon-green)">O5_LEVEL_ACCESS</span><br>
+                UPLINK: ACTIVE_ENCRYPTED
+            </div>
+        </div>
+
+        <div class="portal-box">
+            <div class="box-header">SYS_DIAGNOSTICS</div>
+            <div style="padding: 12px;">
+                <div class="stat-row">
+                    <div class="stat-label"><span>CPU_LOAD</span><span id="cpu-val">45%</span></div>
+                    <div class="bar-bg"><div id="cpu-bar" class="bar-fill" style="width: 45%;"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label"><span>MEM_USAGE</span><span id="mem-val">62%</span></div>
+                    <div class="bar-bg"><div id="mem-bar" class="bar-fill" style="width: 62%;"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label" style="color:var(--alert-red);"><span>ANOMALY_LEVEL</span><span id="anomaly-val">LOW</span></div>
+                    <div class="bar-bg" style="border-color:var(--alert-red);"><div id="anomaly-bar" class="bar-fill" style="width: 15%; background: var(--alert-red);"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portal-box" style="flex-grow: 1;">
+            <div class="box-header">SECURE_NODES</div>
+            <div id="node-list" style="padding: 5px;">
+                <div style="padding:5px; font-size:0.6rem; border-bottom:1px solid #111; opacity:0.8;">> NODE_LONDON: <span style="color:var(--neon-green)">ONLINE</span></div>
+                <div style="padding:5px; font-size:0.6rem; border-bottom:1px solid #111; opacity:0.8;">> NODE_BEIJING: <span style="color:var(--neon-green)">ONLINE</span></div>
+                <div style="padding:5px; font-size:0.6rem; border-bottom:1px solid #111; opacity:0.8;">> NODE_TOKYO: <span style="color:var(--neon-green)">ONLINE</span></div>
+                <div style="padding:5px; font-size:0.6rem; border-bottom:1px solid #111; opacity:0.8;">> NODE_MOSCOW: <span style="color:var(--alert-red)">OFFLINE</span></div>
+            </div>
+        </div>
+
+        <div class="portal-box">
+            <div class="box-header">RAW_OUTPUT_STREAM</div>
+            <div id="log-feed"></div>
+        </div>
+    </aside>
+
+    <main style="display: flex; flex-direction: column;">
+        <div class="portal-box" style="flex-grow: 1; margin-bottom: 0;">
+            <div class="box-header">GLOBAL_DATA_STREAM_MONITOR</div>
+            <div class="monitor-area" id="monitor">
+                <canvas id="matrix-canvas"></canvas>
+                <div class="grid-overlay"></div>
+                <div id="pings-container"></div>
+                
+                <div class="overlay-text" style="top:20px; right:20px; width: 160px;">
+                    <div style="color: var(--neon-green); margin-bottom: 5px;">DECRYPTION_PROG</div>
+                    <div id="decryption-bits">SEQ: 0x88AF1</div>
+                    <div style="margin-top: 8px; font-size: 0.5rem; color: #555;">SCANNING_DMM_PACKETS...</div>
+                </div>
+
+                <div class="overlay-text" style="bottom:20px; left:20px; border-left: 3px solid var(--alert-red);">
+                    <div style="margin-bottom: 4px;">THREAT_LOCATOR</div>
+                    <div id="live-target" style="color:var(--alert-red)">TARGET: WAITING...</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <a href="index.html" class="nav-link">[DISCONNECT]</a>
+            <a href="artifacts.html" class="nav-link">[DATABASE]</a>
+        </div>
+    </main>
+</div>
+
+<footer style="padding: 10px 40px; font-size: 0.7rem; border-top: 1px solid var(--neon-green); display: flex; justify-content: space-between; background: rgba(51,255,51,0.05);">
+    <div>NOSRC_UPLINK_v4.8</div>
+    <div id="clock"></div>
+</footer>
+
+<script>
+    // 1. Matrix 代码雨渲染
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const nums = '0123456789';
+    const alphabet = latin + nums;
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const rainDrops = new Array(Math.floor(columns)).fill(1);
+
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#33ff33';
+        ctx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < rainDrops.length; i++) {
+            const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+            if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                rainDrops[i] = 0;
+            }
+            rainDrops[i]++;
+        }
+    }
+    setInterval(draw, 50);
+
+    // 2. 左侧进度条动态刷新
+    function updateStats() {
+        const cpu = Math.floor(Math.random() * 20) + 40;
+        const mem = Math.floor(Math.random() * 10) + 60;
+        document.getElementById('cpu-val').innerText = cpu + "%";
+        document.getElementById('cpu-bar').style.width = cpu + "%";
+        document.getElementById('mem-val').innerText = mem + "%";
+        document.getElementById('mem-bar').style.width = mem + "%";
+        
+        if(cpu > 55) {
+            document.getElementById('anomaly-val').innerText = "HIGH";
+            document.getElementById('anomaly-bar').style.width = "75%";
+        } else {
+            document.getElementById('anomaly-val').innerText = "LOW";
+            document.getElementById('anomaly-bar').style.width = "15%";
+        }
+    }
+    setInterval(updateStats, 2000);
+
+    // 3. 红点生成与坐标联动
+    function spawnPing() {
+        const container = document.getElementById('pings-container');
+        const ping = document.createElement('div');
+        ping.className = 'ping';
+        const x = Math.random() * 80 + 10;
+        const y = Math.random() * 70 + 15;
+        ping.style.left = x + '%';
+        ping.style.top = y + '%';
+        container.appendChild(ping);
+
+        document.getElementById('live-target').innerText = `TARGET: ADDR_${(Math.random()*0xFFFF).toString(16).toUpperCase()}_V${x.toFixed(0)}`;
+        document.getElementById('decryption-bits').innerText = `SEQ: 0x${(Math.random()*0xFFFFF).toString(16).toUpperCase()}`;
+
+        setTimeout(() => ping.remove(), 2500);
+    }
+    setInterval(spawnPing, 3500);
+
+    // 4. 日志
+    const logs = ["Packet captured.", "Node link stable.", "Handshake bypass OK.", "Scanning Site-07..."];
+    function addLog() {
+        const feed = document.getElementById('log-feed');
+        const d = document.createElement('div');
+        d.innerText = `> ${logs[Math.floor(Math.random()*logs.length)]}`;
+        feed.prepend(d);
+        if(feed.children.length > 8) feed.lastChild.remove();
+    }
+    setInterval(addLog, 2500);
+
+    // 5. 时钟
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleString('en-GB', {hour12:false}).toUpperCase();
+    }, 1000);
+</script>
+
+</body>
+</html>
